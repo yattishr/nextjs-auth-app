@@ -21,7 +21,8 @@ function Signin() {
   const signinUser = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();   
     try {
-      loginUser(formData)
+      const userSession = await loginUser(formData);
+      console.log(userSession);
       router.push("/pages/dashboard");
     } catch (error) {
       console.log(`Error ${error} ocured while signing in`);

@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { ID, databases, storage, account } from "@/appwrite";
+import { it } from "node:test";
 
 interface UserState {
   getCurrentUser: () => Promise<void>;
-  loginUser: (loginuserInfo: LoginUser) => Promise<void>;
-  isLoggedIn: () => Promise<void>;
+  loginUser: (loginuserInfo: LoginUser) => Promise<object>;
+  isLoggedIn: () => Promise<boolean>;
 
   // new user initialization.
   newUser: string;
@@ -12,7 +13,7 @@ interface UserState {
 
   logoutUser: () => Promise<void>;
 
-  createUserAccount: (userInfo: UserAccount) => Promise<void>;
+  createUserAccount: (userInfo: NewUserAccount) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -27,9 +28,12 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   // log in the user
   loginUser: async (loginuserInfo) => {
-    // code below
     try {
-      await account.createEmailSession(loginuserInfo.email, loginuserInfo.password);
+      const userSession = await account.createEmailSession(
+        loginuserInfo.email,
+        loginuserInfo.password
+      );
+      return account.get();
     } catch (error) {
       throw error;
       console.log(`Error ${error} ocurred while logging out.`);
@@ -38,7 +42,13 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   // check if user isLoggedIn
   isLoggedIn: async () => {
-    // code below
+    try {
+      const data = await account.getSession("current");
+      return Boolean(data);
+    } catch (error) {
+      throw error;
+      console.log(`Error ${error} ocurred while getting user session.`);
+    }
   },
 
   // log out user
@@ -63,6 +73,8 @@ export const useUserStore = create<UserState>((set, get) => ({
       );
       // Set the newUser state variable to the user value
       const userId = user.$id;
+      const userName = user.name;
+      const userEmail = user.email;
       get().setNewUser(userId);
     } catch (error) {
       throw error;
@@ -70,3 +82,11 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 }));
+
+/**
+ * TO DO:
+1. After user account is created, need to store user Account data into 
+  a State variable so the Dashboard can access it
+2. Display Alert (tailwind CSS) when an error occurs on Signup OR Login
+3. Implement protected routes so only authenticated users can access Dashboard.
+ */
