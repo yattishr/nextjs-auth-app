@@ -1,11 +1,32 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState, useEffect } from "react";
 import { useUserStore } from "@/store/user.store";
+import { ToastContainer, toast } from "react-toastify";
 
 function Signup() {
   const router = useRouter();
+
+  // state variables for storing local state error message info
+  const [errorOccured, setErrorOccured] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (errorOccured) {
+      toast.error(errorMessage),
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        };
+    }
+  }, [errorOccured]);
 
   const [createUserAccount, loginUser, logoutUser] = useUserStore((state) => [
     state.loginUser,
@@ -22,10 +43,13 @@ function Signup() {
   const createUser = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      createUserAccount(formData);
+      const userSession = await createUserAccount(formData);
       router.push("dashboard");
     } catch (error) {
-      console.log(`Error ${error} ocured while signing up`);
+      console.log(errorOccured);
+      setErrorMessage(`Error: ${error}`); // Set the error message
+      setErrorOccured(true);
+      console.log(`Error ${error} occurred while signing up`);
     }
   };
 

@@ -1,13 +1,33 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useState, useEffect } from "react";
 import { useUserStore } from "@/store/user.store";
+import { ToastContainer, toast } from "react-toastify";
 
 function Signin() {
   const router = useRouter();
+  // state variables for storing local state error message info
+  const [errorOccured, setErrorOccured] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [createUserAccount, loginUser, logoutUser] = useUserStore((state) => [    
+  useEffect(() => {
+    if (errorOccured) {
+      toast.error(errorMessage),
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        };
+    }
+  }, [errorOccured]);
+
+  const [createUserAccount, loginUser, logoutUser] = useUserStore((state) => [
     state.createUserAccount,
     state.loginUser,
     state.logoutUser,
@@ -19,13 +39,16 @@ function Signin() {
   });
 
   const signinUser = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();   
+    e.preventDefault();
     try {
       const userSession = await loginUser(formData);
       console.log(userSession);
       router.push("/pages/dashboard");
     } catch (error) {
-      console.log(`Error ${error} ocured while signing in`);
+      console.log(errorOccured);
+      setErrorMessage(`Error: ${error}`); // Set the error message
+      setErrorOccured(true);
+      console.log(`Error ${error} occurred while signing in`);
     }
   };
 
@@ -51,7 +74,6 @@ function Signin() {
         </p>
         <form onSubmit={signinUser} className="mt-8">
           <div className="space-y-5">
-          
             <div>
               <label
                 htmlFor="email"
